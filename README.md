@@ -4,13 +4,19 @@ nano-jq
 A collection of small(ish) random jquery plugins
 
 
-jqTyper.js
+typer.js
 ----------
 
 A simple typing effect when passed a string. 
 
 
-jqHashBang.js
+hashBang.js
 -------------
 
 Basic routing when adding a hash (#) to the url
+
+
+fader.js
+--------
+
+Small plugin that gives an element a 'fade-in' effect with some animation options
