@@ -3,16 +3,25 @@
 
 	// interval - the instance of setInterval() call that powers the effect
 	// typeCount - counter used to keep track of options.string's position
-	// scrollPos - scroll height of Dom Element to receive the animation
+	// currentText - object to store internal data that is passed to onInterval() callback
 	// _this - reference to DOM element on which the animation is bound, primarily for ease of scope
-	var interval, typeCount = 0, scrollPos = $(this).scrollHeight, _this;
+	var typeCount = 0;
+	var currentText = {
+		fullString: "",
+		currentString: ""
+	};
+
+	var the_substr = "";
+	var interval;
+	var _this;
 
 	var options = {
-		'speed' : 50,					// speed of the animation
-		'cursor' : '_',					// character to represent the cursor within the animation
-		'string' : 'This is a typer',	// string to be used as the text for the animation
-		'shiftType' : false,			// flag to determine if the typing should 'shift' the text up withing DOM element
-		'onComplete' : $.noop			// onComplete function to be called after the animation is complete (optional)
+		speed		: 50,					// speed of the animation
+		cursor		: '_',					// character to represent the cursor within the animation
+		string		: 'This is a typer',	// string to be used as the text for the animation
+		shiftType	: false,				// flag to determine if the typing should 'shift' the text up withing DOM element
+		onInterval	: null,					// optional callback function to be called after each animation interval
+		onComplete	: $.noop				// optional callback function to be called after the animation is complete
 	};
 
 
@@ -21,22 +30,34 @@
 	// and will drive the typing effect
 	var run = function() {
 		if(typeCount <= options.string.length) {
-			_this.html(options.string.substr(0, typeCount) + options.cursor);
 
-			// determine if animation will 'shift up' the text as it gets
-			// to bottom of DOM element
-			if(options.shiftType && scrollPos < _this.scrollHeight) {
-				_this.scrollTop = (scrollPos += 10);
+			// store substring in variable
+			the_substr = options.string.substr(0, typeCount);
+
+			// update element's display
+			_this.html(the_substr + options.cursor);
+
+			// fire callback if defined
+			if(typeof options.onInterval === 'function') {
+				
+				// update object before passing to onInterval
+				currentText.fullString 			= options.string;
+				currentText.currentString 		= the_substr;
+
+				// fire callback - passing the element plugin is updating
+				// to callback's 'this' keyword, and the currentText object as
+				// it's argument
+				options.onInterval.call(_this[0], currentText);
 			}
 			typeCount++;
 
 		} else {
+
+			// typing is complete
 			_this.html(options.string);
 			clearInterval(interval);
 
-			if(options.onComplete) {
-				options.onComplete();
-			}
+			options.onComplete.call(_this);
 		}
 	};
 
@@ -47,6 +68,7 @@
 		// general instantiation - user may apply object
 		// to customize settings
 		init : function(optionsObj) {
+
 			options = $.extend(options, optionsObj);
 		},
 
@@ -54,6 +76,7 @@
 		play : function(optionsObj) {
 
 			if(typeof(optionsObj) ==='object'){
+
 				methods.init(optionsObj)
 			} 
 
@@ -63,12 +86,14 @@
 		// stops the animation in place - may be restarted by 
 		// calling 'play' method again.
 		pause : function() {
+
 			clearInterval(interval);
 		},
 
 		// stops the animation and clears the
 		// display & counter - may not be restarted
 		stop : function() {
+
 			clearInterval(interval);
 			typeCount = 0;
 		}
@@ -83,14 +108,14 @@
 
 		// Method calling logic
 		if(methods[method]) {
+
 			return methods[method].apply(_this, Array.prototype.slice.call(arguments, 1));
-
 		} else if( typeof method === 'object' || !method) {
+
 			return methods.init.apply(_this, arguments);
-
 		} else {
-			$.error('Method ' + method + ' does not exist on jQuery.typer');
 
+			$.error('Method ' + method + ' does not exist on jQuery.typer');
 		}
 
 		return _this;
